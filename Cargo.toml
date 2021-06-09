@@ -3,6 +3,7 @@ name = "sampicore"
 version = "0.1.0"
 authors = ["Daniel Valenzuela <daniel@admetricks.com>"]
 edition = "2018"
+description = "🐶 Take a screenshot get a shareable URL"
 license-file = "LICENSE"
 repository = "https://github.com/DanielVZ96/sampicore.git"
 homepage = "https://github.com/DanielVZ96/sampicore"
