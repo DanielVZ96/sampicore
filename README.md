@@ -1,2 +1,2 @@
 # sampicore
-Take a screenshot get a shareable URL
+Take a screenshot, get a shareable URL
