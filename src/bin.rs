@@ -8,11 +8,11 @@ mod lib;
 extern crate clap;
 
 fn main() {
-    let matches = clap_app!(myapp =>
-        (version: "1.0")
-        (author: "Daniel V. <dowy.vz6@gmail.com>")
+    let matches = clap_app!(sampic =>
+        (version: "0.2.0")
         (about: "Takes pictures and generates links")
         (@setting SubcommandRequiredElseHelp)
+        (@setting ColoredHelp)
         (@subcommand local =>
             (about: "Takes a screenshot, saves it locally and returns it's path.")
         )
@@ -25,9 +25,23 @@ fn main() {
         (@subcommand server =>
             (about: "Runs a sampic server.")
         )
+        (@subcommand config =>
+            (about: "Manage sampic configuration.")
+            (@setting SubcommandRequiredElseHelp)
+            (@setting ColoredHelp)
+            (@subcommand set =>
+                (about: "Set sampic configuration.")
+                (@setting ArgRequiredElseHelp)
+                (@arg NAME: +required "Name of configuration to set.")
+                (@arg VALUE: +required "Value to set.")
+            )
+            (@subcommand list =>
+                (about: "List current sampic configuration values.")
+            )
+        )
     )
     .get_matches();
-    match matches.subcommand_name() {
+    let message: String = match matches.subcommand_name() {
         Some("local") => lib::local_screenshot(),
         Some("s3") => lib::s3_screenshot(),
         Some("upload") => lib::upload_screenshot(),
@@ -35,6 +49,26 @@ fn main() {
             .mount("/", routes![lib::server::upload])
             .launch()
             .to_string(),
+        Some("config") => {
+            let subcommand = matches.subcommand_matches("config").unwrap();
+            match subcommand.subcommand_name() {
+                Some("set") => {
+                    let set_matches = subcommand.subcommand_matches("set").unwrap();
+                    let name = set_matches.value_of("NAME").unwrap().to_string();
+                    let value = set_matches.value_of("VALUE").unwrap().to_string();
+                    lib::config::set(name, value).unwrap();
+                    return ();
+                }
+                Some("list") => {
+                    let list: String = lib::config::list().unwrap();
+                    println!("{}", list);
+                    return ();
+                }
+                Some(_) | None => "Ok".to_string(),
+            };
+            return ();
+        }
         Some(_) | None => "Do something!".to_string(),
     };
+    println!("{}", message);
 }

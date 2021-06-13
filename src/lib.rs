@@ -1,13 +1,12 @@
 #![feature(proc_macro_hygiene, decl_macro)]
-/// Library for sampic core functionality that is shared by both the client and server.
-/// This includes:
-/// - Configuration
-/// - Storage backend management
-/// - Image compression and storage
-/// - URL generation
-/// - Server endpoint
-/// - Authentication?
-
+//! Library for sampic core functionality that is shared by both the client and server.
+//! This includes:
+//! - Configuration
+//! - Storage backend management
+//! - Image compression and storage
+//! - URL generation
+//! - Server endpoint
+//! - Authentication (TODO)
 pub mod config {
     extern crate confy;
     use serde::{Deserialize, Serialize};
@@ -27,20 +26,8 @@ pub mod config {
         }
     }
 
-    #[derive(Debug)]
-    pub enum StorageType {
-        Local,
-    }
-
-    impl fmt::Display for StorageType {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, "{:?}", self)
-        }
-    }
-
     #[derive(Serialize, Deserialize)]
     pub struct SampConf {
-        pub storage: String,
         pub api_key: String,
         pub api_secret_key: String,
         pub region: String,
@@ -53,23 +40,14 @@ pub mod config {
     impl ::std::default::Default for SampConf {
         fn default() -> Self {
             Self {
-                storage: "Local".into(),
                 api_key: "".into(),
                 region: "fr-par".into(),
                 endpoint: "https://s3.fr-par.scw.cloud".into(),
                 bucket: "sampic-store".into(),
                 api_secret_key: "".into(),
                 local_path: "/tmp/".into(),
-                sampic_endpoint: "https://sampic.me/upload".to_string(),
+                sampic_endpoint: "https://sampic.xyz/upload".to_string(),
             }
-        }
-    }
-
-    pub fn storage() -> Result<StorageType, ConfigError> {
-        let cfg: SampConf = confy::load("sampic")?;
-        match cfg.storage.as_ref() {
-            "local" => Ok(StorageType::Local),
-            &_ => Err(ConfigError::InvalidStorageValue),
         }
     }
 
@@ -79,6 +57,27 @@ pub mod config {
             "" => Err(ConfigError::APIKeyNotDefined),
             _ => Ok(cfg.api_key),
         }
+    }
+
+    pub fn list() -> Result<String, ConfigError> {
+        let cfg = config()?;
+        return Ok(format!(
+            "{}={}\n{}={}\n{}={}\n{}={}\n{}={}\n{}={}\n{}={}\n",
+            "api_key",
+            cfg.api_key,
+            "api_secret_key",
+            cfg.api_secret_key,
+            "region",
+            cfg.region,
+            "endpoint",
+            cfg.endpoint,
+            "bucket",
+            cfg.bucket,
+            "local_path",
+            cfg.local_path,
+            "sampic_endpoint",
+            cfg.sampic_endpoint
+        ));
     }
 
     pub fn api_secret_key() -> Result<String, ConfigError> {
@@ -98,6 +97,36 @@ pub mod config {
         let cfg: SampConf = confy::load("sampic")?;
         return Ok(cfg);
     }
+
+    pub fn set(key: String, value: String) -> Result<(), ConfigError> {
+        let mut cfg = config()?;
+        match key.as_str() {
+            "api_key" => {
+                cfg.api_key = value;
+            }
+            "region" => {
+                cfg.region = value;
+            }
+            "endpoint" => {
+                cfg.endpoint = value;
+            }
+            "bucket" => {
+                cfg.bucket = value;
+            }
+            "api_secret_key" => {
+                cfg.api_secret_key = value;
+            }
+            "local_path" => {
+                cfg.local_path = value;
+            }
+            "sampic_endpoint" => {
+                cfg.sampic_endpoint = value;
+            }
+            _ => return Err(ConfigError::InvalidStorageValue),
+        };
+        confy::store("sampic", cfg)?;
+        return Ok(());
+    }
 }
 
 pub mod storage {
@@ -105,10 +134,8 @@ pub mod storage {
     use std::collections::hash_map::DefaultHasher;
     use std::fmt;
     use std::fs;
-    use std::fs::File;
     use std::hash::Hasher;
     use std::io::prelude::*;
-    use std::mem;
     use std::path::Path;
     use std::path::PathBuf;
     extern crate image;
@@ -142,8 +169,6 @@ pub mod storage {
     impl<T> From<RusotoError<T>> for StorageError {
         fn from(e: RusotoError<T>) -> StorageError {
             match e {
-                PutObjectError => StorageError::SaveError,
-                GetObjectError => StorageError::ReadError,
                 RusotoError::Service(_) => StorageError::UnknownError,
                 RusotoError::HttpDispatch(_) => StorageError::IOError,
                 RusotoError::Credentials(_) => StorageError::CredentialsError,
@@ -422,13 +447,13 @@ pub mod server {
 }
 
 use notify_rust::{Hint, Notification};
-fn notify(path: &str) {
+fn notify(path: &str, message: &str) {
     Notification::new()
-        .summary("Sampic: screenshot taken")
-        .body("URL copied to clipboard.")
+        .summary("Sampic screenshot taken.")
+        .body(message)
         .icon("camera")
         .image_path(&path)
-        .timeout(15)
+        .timeout(5)
         .sound_name("message-new-instant")
         .hint(Hint::Transient(true))
         .show()
@@ -442,6 +467,9 @@ pub(crate) fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storag
         Ok(it) => it,
         _ => unreachable!(),
     };
+    let mut clipboard = Clipboard::new().unwrap();
+    clipboard.set_text(destination.clone()).unwrap();
+    notify(&destination, "Copied URL to clipboard. Uploading to server...");
     storage
         .save(
             &buffer,
@@ -450,9 +478,7 @@ pub(crate) fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storag
             u32::try_from(h).unwrap(),
         )
         .unwrap_or("error while saving file".to_string());
-    let mut clipboard = Clipboard::new().unwrap();
-    clipboard.set_text(destination.clone()).unwrap();
-    notify(&destination);
+    notify(&destination, "Uploaded!");
     return destination;
 }
 

@@ -1,9 +1,10 @@
 [package]
 name = "sampicore"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Daniel Valenzuela <daniel@admetricks.com>"]
 edition = "2018"
 description = "🐶 Take a screenshot get a shareable URL"
+licence = "MIT"
 license-file = "LICENSE"
 repository = "https://github.com/DanielVZ96/sampicore.git"
 homepage = "https://github.com/DanielVZ96/sampicore"
@@ -14,7 +15,6 @@ keywords = ["screenshot", "upload", "sam"]
 confy = "^0.3.1"
 scrap = "0.5"
 image = "^0.23.14"
-egg-mode = "0.15"
 directories-next = "^2.0"
 futures = "^0.3"
 serde = { version = "^1.0", features = ["derive"] }
