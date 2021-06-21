@@ -4,7 +4,7 @@ Take a screenshot, get a shareable URL
 
 # Installation
 
-I've only installed it on PopOS (Ubuntu/Debian based), and I needed these deps:
+It should be cross-compatible, but I haven't tested it. I've only installed it on PopOS (Ubuntu/Debian based), and I needed these deps:
 
 ```sh
 sudo apt update && sudo apt install libxcb-randr0-dev build-essential libssl-dev libssl-dev pkg-config libxcb1-dev libxcb-shm0-dev
@@ -13,7 +13,7 @@ sudo apt update && sudo apt install libxcb-randr0-dev build-essential libssl-dev
 Currently it's only published in cargo:
 
 ```sh
-$ cargo install sampicore  # will download and build sampic
+cargo install sampicore  # will download and build sampic
 ```
 
 # Configuration
@@ -21,7 +21,6 @@ $ cargo install sampicore  # will download and build sampic
 It consists on a single `sampic.toml` file with the following contents:
 
 ```toml
-$ cat ~/.config/sampic/sampic.toml
 api_key = 'S3_API_KEY'
 api_secret_key = 'S3_SECRET_API_KEY'
 region = 'S3_REGION_'
@@ -42,7 +41,6 @@ Configuration will be saved locally depending on your OS in the following direct
 # Usage
 
 ```text
-$ sampic
 sampic 0.1.0
 Takes pictures and generates links
 
@@ -148,5 +146,6 @@ There are some things I'd like to do in order to make sampic feature complete fo
 - [ ] Tests.
 - [ ] A logo.
 - [ ] A homepage.
+- [ ] Check cross-compatibility
 
 I'd love to do them all, but I'm currently working full-time, so I just work sporadically on sampic when I can during my free time.
