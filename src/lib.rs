@@ -448,15 +448,16 @@ pub mod server {
 
 use notify_rust::{Hint, Notification};
 fn notify(path: &str, message: &str) {
-    Notification::new()
-        .summary("Sampic screenshot taken.")
+    let mut notif = Notification::new();
+    notif.summary("Sampic screenshot taken.")
         .body(message)
         .icon("camera")
         .image_path(&path)
         .timeout(5)
-        .sound_name("message-new-instant")
-        .hint(Hint::Transient(true))
-        .show()
+        .sound_name("message-new-instant");
+    #[cfg(target_os = "linux")]
+    notif.hint(Hint::Transient(true));
+    notif.show()
         .expect("Notification Failure!");
 }
 pub(crate) fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storage: T) -> String {
