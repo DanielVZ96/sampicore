@@ -4,7 +4,7 @@ version = "0.2.1"
 authors = ["Daniel Valenzuela <daniel@admetricks.com>"]
 edition = "2018"
 description = "🐶 Take a screenshot get a shareable URL"
-licence = "MIT"
+license = "MIT"
 license-file = "LICENSE"
 repository = "https://github.com/DanielVZ96/sampicore.git"
 homepage = "https://github.com/DanielVZ96/sampicore"
@@ -30,6 +30,10 @@ arboard = "1.2.1"
 minreq = { version = "2.4.1", features = ["https"] }
 clap = "2.33.3"
 notify-rust = "4.5.2"
+piston = "0.53.0"
+piston2d-opengl_graphics = "0.78.0"
+piston2d-graphics = "0.40.0"
+pistoncore-glutin_window = "0.69.0"
 
 [lib]
 name = "sampicore"
