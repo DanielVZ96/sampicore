@@ -1,6 +1,6 @@
 [package]
 name = "sampicore"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Daniel Valenzuela <daniel@admetricks.com>"]
 edition = "2018"
 description = "🐶 Take a screenshot get a shareable URL"
