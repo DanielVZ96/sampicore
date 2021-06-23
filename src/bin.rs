@@ -3,10 +3,14 @@
 extern crate rocket;
 #[macro_use]
 extern crate serde_derive;
-mod lib;
 #[macro_use]
 extern crate clap;
+extern crate glutin_window;
+extern crate graphics;
+extern crate opengl_graphics;
+extern crate piston;
 
+use sampicore as lib;
 fn main() {
     let matches = clap_app!(sampic =>
         (version: "0.2.0")

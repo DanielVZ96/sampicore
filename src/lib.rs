@@ -7,10 +7,13 @@
 //! - URL generation
 //! - Server endpoint
 //! - Authentication (TODO)
+mod region;
+
+extern crate piston;
+
 pub mod config {
     extern crate confy;
     use serde::{Deserialize, Serialize};
-    use std::fmt;
 
     #[derive(Debug)]
     pub enum ConfigError {
@@ -382,6 +385,7 @@ pub mod storage {
 }
 
 pub mod img {
+    use image::io::Reader;
     use scrap::{Capturer, Display};
     use std::io::ErrorKind::WouldBlock;
     use std::thread;
@@ -422,6 +426,23 @@ pub mod img {
             return (bitflipped, w, h);
         }
     }
+
+    pub fn crop(path: &str, region: [f64; 4]) -> Option<(Vec<u8>, usize, usize)> {
+        let mut image = Reader::open(path).ok()?.decode().ok()?;
+        Some((
+            image
+                .crop(
+                    region[0] as u32,
+                    region[1] as u32,
+                    region[2] as u32,
+                    region[3] as u32,
+                )
+                .to_rgba8()
+                .to_vec(),
+            region[2] as usize,
+            region[3] as usize,
+        ))
+    }
 }
 extern crate scrap;
 
@@ -449,7 +470,8 @@ pub mod server {
 use notify_rust::{Hint, Notification};
 fn notify(path: &str, message: &str) {
     let mut notif = Notification::new();
-    notif.summary("Sampic screenshot taken.")
+    notif
+        .summary("Sampic screenshot taken.")
         .body(message)
         .icon("camera")
         .image_path(&path)
@@ -457,24 +479,36 @@ fn notify(path: &str, message: &str) {
         .sound_name("message-new-instant");
     #[cfg(target_os = "linux")]
     notif.hint(Hint::Transient(true));
-    notif.show()
-        .expect("Notification Failure!");
+    notif.show().expect("Notification Failure!");
 }
-pub(crate) fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storage: T) -> String {
+
+pub fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storage: T) -> String {
+    const EXTENSION: &str = "png";
     let (buffer, w, h) = screenshot();
-    let extension = "png";
-    let name = format!("{}.{}", storage.hash(&buffer), extension);
+    let local_storage = storage::Local::new();
+    let fullscreenshot = local_storage.save(
+        &buffer,
+        EXTENSION.into(),
+        u32::try_from(w).unwrap(),
+        u32::try_from(h).unwrap(),
+    ).unwrap();
+    let region = region::get_region(&fullscreenshot);
+    let (buffer, w, h) = img::crop(&fullscreenshot, region.unwrap()).unwrap();
+    let name = format!("{}.{}", storage.hash(&buffer), EXTENSION);
     let destination = match storage.link(&name) {
         Ok(it) => it,
         _ => unreachable!(),
     };
     let mut clipboard = Clipboard::new().unwrap();
     clipboard.set_text(destination.clone()).unwrap();
-    notify(&destination, "Copied URL to clipboard. Uploading to server...");
+    notify(
+        &destination,
+        "Copied URL to clipboard. Uploading to server...",
+    );
     storage
         .save(
             &buffer,
-            extension.into(),
+            EXTENSION.into(),
             u32::try_from(w).unwrap(),
             u32::try_from(h).unwrap(),
         )
@@ -483,15 +517,15 @@ pub(crate) fn sampic_screenshot<T: 'static + Storage + std::marker::Send>(storag
     return destination;
 }
 
-pub(crate) fn local_screenshot() -> String {
+pub fn local_screenshot() -> String {
     sampic_screenshot(storage::Local::new())
 }
 
-pub(crate) fn s3_screenshot() -> String {
+pub fn s3_screenshot() -> String {
     sampic_screenshot(storage::S3Store::new().expect("Error while stablishing S3 connection"))
 }
 
-pub(crate) fn upload_screenshot() -> String {
+pub fn upload_screenshot() -> String {
     sampic_screenshot(
         storage::SampicServer::new()
             .expect("Error while stablishing connection with sampic server."),
