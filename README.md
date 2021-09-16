@@ -10,7 +10,7 @@ It should be cross-compatible, but I haven't tested it. I've only installed it o
 sudo apt update && sudo apt install libxcb-randr0-dev build-essential libssl-dev libssl-dev pkg-config libxcb1-dev libxcb-shm0-dev
 ```
 
-Currently it's only published in cargo:
+Currently it's only published in the [releases page](https://github.com/DanielVZ96/sampicore/releases) and cargo:
 
 ```sh
 cargo install sampicore  # will download and build sampic
@@ -27,7 +27,7 @@ region = 'S3_REGION_'
 endpoint = 'S3_ENDPOINT'
 bucket = 'sampic-store'
 local_path = '/tmp'
-sampic_endpoint = 'https://sampic.xyz/upload'
+sampic_endpoint = 'https://api.sampic.xyz/upload'
 ```
 
 Configuration will be saved locally depending on your OS in the following directories:
@@ -135,11 +135,27 @@ SUBCOMMANDS:
 
 ```
 
+# Server Systemd service
+
+``` text
+[Unit]
+Description=Sampic server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/path/sampic server
+Restart=always
+# Other restart options: always, on-abort, etc
+
+[Install]
+WantedBy=default.target
+```
+
 # Future
 
 There are some things I'd like to do in order to make sampic feature complete for my use-case:
 
-- [ ] Crossplatform region selection. Could be done in linux with the [hacksaw](https://crates.io/crates/hacksaw) crate.
 - [ ] Make sure it's secure.
 - [ ] Rate limit everything with the option to register and maybe even pay to relax rate limits.
 - [ ] Separate code with [feature flags](https://doc.rust-lang.org/cargo/reference/features.html).

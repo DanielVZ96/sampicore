@@ -49,7 +49,7 @@ pub mod config {
                 bucket: "sampic-store".into(),
                 api_secret_key: "".into(),
                 local_path: "/tmp/".into(),
-                sampic_endpoint: "https://sampic.xyz/upload".to_string(),
+                sampic_endpoint: "https://api.sampic.xyz/upload".to_string(),
             }
         }
     }
@@ -304,7 +304,7 @@ pub mod storage {
             let link = self.link(&name);
             let local_path = local_storage.save(&buffer, extension, w, h)?;
             println!("{}", local_path);
-            let mut file = std::fs::File::open(local_path)?;
+            let mut file = std::fs::File::open(&local_path)?;
             let mut buf: Vec<u8> = vec![];
             file.read_to_end(&mut buf)?;
 
@@ -318,6 +318,7 @@ pub mod storage {
                     ..Default::default()
                 }))
                 .expect("Error while uploading file");
+            std::fs::remove_file(local_path)?;
             return link;
         }
         fn read_to(&self, name: &String, to: &mut Vec<u8>) -> StorageResult<()> {
@@ -460,7 +461,6 @@ pub mod server {
 
     #[rocket::post("/upload?<extension>&<w>&<h>", data = "<data>")]
     pub fn upload(extension: String, w: u32, h: u32, data: Data) -> Result<String, StorageError> {
-        println!("UPLOADING");
         let mut buffer = Vec::new();
         data.open().take(LIMIT).read_to_end(&mut buffer)?;
         S3Store::new()?.save(&buffer, extension.into(), w, h)

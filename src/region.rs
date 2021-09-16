@@ -78,7 +78,7 @@ pub fn get_region(screenshot_path: &str) -> Option<[f64; 4]> {
     let mut initial_cursor_pos_set = false;
     let mut cursor_pos = [1.0, 1.0];
 
-    const COLOR: [f32; 4] = [1.0, 1.0, 1.0, 0.5];
+    const COLOR: [f32; 4] = [1.0, 1.0, 0.0, 0.1];
 
     let rect = rectangle::Rectangle::new(COLOR).border(rectangle::Border {
         color: COLOR,
